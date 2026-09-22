@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Swatch — hex to PNG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23da291c'/></svg>">
+<style>
+  /* Ferrari design system — see ../DESIGN.md */
+  :root {
+    --primary: #da291c;
+    --primary-hover: #9d2211;
+    --primary-active: #b01e0a;
+    --ink: #ffffff;
+    --body: #969696;
+    --muted: #666666;
+    --hairline: #303030;
+    --canvas: #181818;
+    --canvas-elevated: #303030;
+    --canvas-light: #ffffff;
+    --on-light: #181818;
+
+    --xxxs: 4px; --xxs: 8px; --xs: 16px; --sm: 24px; --md: 32px; --lg: 48px; --xl: 64px;
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { height: 100%; }
+
+  body {
+    margin: 0;
+    min-height: 100%;
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--lg) var(--xs);
+  }
+
+  main {
+    margin: auto;              /* keeps the top from clipping when taller than the viewport */
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sm);
+  }
+
+  /* --- masthead --- */
+  .masthead { display: flex; align-items: center; gap: 10px; }
+  .mark { width: 14px; height: 14px; background: var(--primary); flex-shrink: 0; }
+  .wordmark {
+    font-size: 13px; font-weight: 600; letter-spacing: 1.1px;
+    text-transform: uppercase; margin: 0;
+  }
+  .wordmark span { color: var(--muted); }
+
+  /* --- the chip --- */
+  .chip {
+    width: 100%;
+    background: var(--canvas-light);
+    padding: 22px 22px 0;
+    display: block;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.04);
+  }
+  .chip-color {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: var(--swatch, #da291c);
+    transition: background 120ms linear;
+  }
+  .chip-label { padding: 18px 0 26px; color: var(--on-light); }
+  .chip-hex {
+    font-size: 26px; font-weight: 500; letter-spacing: 0.195px;
+    line-height: 1.2; text-transform: uppercase; margin: 0;
+  }
+  .chip-meta {
+    font-size: 11px; font-weight: 600; letter-spacing: 1.1px;
+    text-transform: uppercase; color: #666; margin: 6px 0 0;
+  }
+
+  /* --- input row --- */
+  .input-row { display: flex; width: 100%; gap: var(--xxs); }
+  .field { position: relative; flex: 1; }
+  .field::before {
+    content: '#';
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--muted); font-size: 16px; font-weight: 500; pointer-events: none;
+  }
+  input[type="text"] {
+    width: 100%; height: 48px;
+    padding: 14px 16px 14px 30px;
+    background: var(--canvas);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    color: var(--ink);
+    font-family: var(--font); font-size: 16px; font-weight: 500;
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  input[type="text"]:focus { outline: none; border-color: var(--ink); }
+  input[type="text"].invalid { border-color: var(--primary); }
+
+  .icon-btn {
+    width: 48px; height: 48px; flex-shrink: 0;
+    background: transparent;
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    color: var(--body);
+    font-family: var(--font); font-size: 16px;
+    cursor: pointer; padding: 0;
+    display: grid; place-items: center;
+  }
+  .icon-btn:hover { border-color: var(--ink); color: var(--ink); }
+  .icon-btn svg { width: 18px; height: 18px; }
+
+  .picker { position: relative; width: 48px; height: 48px; flex-shrink: 0; }
+  .picker input[type="color"] {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    opacity: 0; cursor: pointer; border: 0; padding: 0;
+  }
+  .picker-face {
+    position: absolute; inset: 0;
+    border: 1px solid var(--hairline); border-radius: 4px;
+    background: var(--swatch, #da291c);
+    pointer-events: none;
+  }
+  .picker:hover .picker-face { border-color: var(--ink); }
+
+  /* --- readouts --- */
+  .readouts {
+    width: 100%;
+    border-top: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .readout {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--xs); padding: 11px 0;
+    border-top: 1px solid var(--hairline);
+  }
+  .readout:first-child { border-top: 0; }
+  .readout dt {
+    font-size: 11px; font-weight: 600; letter-spacing: 1.1px;
+    text-transform: uppercase; color: var(--muted); margin: 0;
+  }
+  .readout dd {
+    margin: 0; font-size: 13px; font-weight: 400; color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    display: flex; align-items: center; gap: var(--xxs);
+  }
+  .copy {
+    background: transparent; border: 0; padding: 2px 0; cursor: pointer;
+    color: var(--muted); font-family: var(--font);
+    font-size: 11px; font-weight: 600; letter-spacing: 1.1px; text-transform: uppercase;
+  }
+  .copy:hover { color: var(--ink); }
+
+  /* --- segmented controls --- */
+  .controls { width: 100%; display: flex; flex-direction: column; gap: var(--xxs); }
+  .seg { display: flex; border: 1px solid var(--hairline); border-radius: 0; }
+  .seg button {
+    flex: 1; height: 40px;
+    background: transparent; border: 0; border-left: 1px solid var(--hairline);
+    color: var(--body); cursor: pointer;
+    font-family: var(--font); font-size: 11px; font-weight: 600;
+    letter-spacing: 1.1px; text-transform: uppercase;
+  }
+  .seg button:first-child { border-left: 0; }
+  .seg button:hover { color: var(--ink); }
+  .seg button[aria-pressed="true"] { background: var(--canvas-elevated); color: var(--ink); }
+
+  /* --- download --- */
+  .download {
+    width: 100%; height: 48px;
+    background: var(--primary); color: #fff;
+    border: 0; border-radius: 0; cursor: pointer;
+    font-family: var(--font); font-size: 14px; font-weight: 700;
+    letter-spacing: 1.4px; text-transform: uppercase;
+    padding: 14px 32px;
+  }
+  .download:hover { background: var(--primary-hover); }
+  .download:active { background: var(--primary-active); }
+
+  /* --- recents --- */
+  .recents { width: 100%; display: flex; flex-wrap: wrap; gap: var(--xxxs); min-height: 28px; }
+  .recents button {
+    width: 28px; height: 28px; border: 1px solid var(--hairline);
+    padding: 0; cursor: pointer; border-radius: 0;
+  }
+  .recents button:hover { border-color: var(--ink); }
+
+  footer {
+    font-size: 11px; font-weight: 600; letter-spacing: 1.1px;
+    text-transform: uppercase; color: var(--muted); text-align: center;
+  }
+
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+  @media (max-width: 420px) {
+    body { padding: var(--sm) var(--xs); }
+    .chip-hex { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="masthead">
+    <div class="mark"></div>
+    <h1 class="wordmark">Swatch <span>/ hex to image</span></h1>
+  </div>
+
+  <figure class="chip" id="chip">
+    <div class="chip-color" id="chipColor"></div>
+    <figcaption class="chip-label">
+      <p class="chip-hex" id="chipHex">#DA291C</p>
+      <p class="chip-meta" id="chipMeta">R 218 · G 41 · B 28</p>
+    </figcaption>
+  </figure>
+
+  <div class="input-row">
+    <div class="field">
+      <label class="sr" for="hex">Hex colour</label>
+      <input id="hex" type="text" value="DA291C" spellcheck="false" autocomplete="off"
+             autocapitalize="off" maxlength="7" placeholder="DA291C" inputmode="latin">
+    </div>
+    <div class="picker" title="Pick visually">
+      <input id="picker" type="color" value="#da291c" aria-label="Pick a colour visually">
+      <div class="picker-face"></div>
+    </div>
+    <button class="icon-btn" id="random" title="Random colour" aria-label="Random colour">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <rect x="3" y="3" width="18" height="18" rx="1"/>
+        <circle cx="8.5" cy="8.5" r="1.4" fill="currentColor" stroke="none"/>
+        <circle cx="15.5" cy="15.5" r="1.4" fill="currentColor" stroke="none"/>
+        <circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/>
+      </svg>
+    </button>
+  </div>
+
+  <dl class="readouts">
+    <div class="readout">
+      <dt>Hex</dt>
+      <dd><span id="outHex">#DA291C</span><button class="copy" data-copy="hex">Copy</button></dd>
+    </div>
+    <div class="readout">
+      <dt>RGB</dt>
+      <dd><span id="outRgb">218, 41, 28</span><button class="copy" data-copy="rgb">Copy</button></dd>
+    </div>
+    <div class="readout">
+      <dt>HSL</dt>
+      <dd><span id="outHsl">3, 77%, 48%</span><button class="copy" data-copy="hsl">Copy</button></dd>
+    </div>
+    <div class="readout">
+      <dt>Nearest</dt>
+      <dd><span id="outName">Firebrick</span></dd>
+    </div>
+  </dl>
+
+  <div class="controls">
+    <div class="seg" id="styleSeg" role="group" aria-label="Export style">
+      <button data-style="flat" aria-pressed="true">Flat</button>
+      <button data-style="chip" aria-pressed="false">Chip</button>
+    </div>
+    <div class="seg" id="formatSeg" role="group" aria-label="File format">
+      <button data-format="png" aria-pressed="true">PNG</button>
+      <button data-format="jpg" aria-pressed="false">JPG</button>
+      <button data-format="svg" aria-pressed="false">SVG</button>
+    </div>
+    <div class="seg" id="sizeSeg" role="group" aria-label="Pixel size">
+      <button data-size="512" aria-pressed="false">512</button>
+      <button data-size="1024" aria-pressed="true">1024</button>
+      <button data-size="2048" aria-pressed="false">2048</button>
+    </div>
+  </div>
+
+  <button class="download" id="download">Download PNG</button>
+
+  <div class="recents" id="recents" aria-label="Recent colours"></div>
+
+  <footer id="status">Enter to download</footer>
+</main>
+
+<script>
+(() => {
+  'use strict';
+
+  const NAMES = {
+    black:'000000', white:'ffffff', gainsboro:'dcdcdc', silver:'c0c0c0', gray:'808080',
+    dimgray:'696969', darkslategray:'2f4f4f', charcoal:'36454f', slategray:'708090',
+    lightgray:'d3d3d3', whitesmoke:'f5f5f5', ivory:'fffff0', beige:'f5f5dc',
+    linen:'faf0e6', snow:'fffafa', seashell:'fff5ee', cream:'fffdd0',
+    red:'ff0000', firebrick:'b22222', crimson:'dc143c', darkred:'8b0000',
+    indianred:'cd5c5c', maroon:'800000', tomato:'ff6347', salmon:'fa8072',
+    coral:'ff7f50', orangered:'ff4500', orange:'ffa500', darkorange:'ff8c00',
+    goldenrod:'daa520', gold:'ffd700', yellow:'ffff00', khaki:'f0e68c',
+    olive:'808000', olivedrab:'6b8e23', darkolivegreen:'556b2f',
+    yellowgreen:'9acd32', chartreuse:'7fff00', lawngreen:'7cfc00',
+    lime:'00ff00', limegreen:'32cd32', green:'008000', darkgreen:'006400',
+    forestgreen:'228b22', seagreen:'2e8b57', mediumseagreen:'3cb371',
+    springgreen:'00ff7f', mintcream:'f5fffa', teal:'008080', darkcyan:'008b8b',
+    cyan:'00ffff', turquoise:'40e0d0', aquamarine:'7fffd4', cadetblue:'5f9ea0',
+    steelblue:'4682b4', lightsteelblue:'b0c4de', skyblue:'87ceeb',
+    deepskyblue:'00bfff', dodgerblue:'1e90ff', cornflowerblue:'6495ed',
+    royalblue:'4169e1', blue:'0000ff', mediumblue:'0000cd', navy:'000080',
+    midnightblue:'191970', slateblue:'6a5acd', darkslateblue:'483d8b',
+    indigo:'4b0082', purple:'800080', darkviolet:'9400d3', blueviolet:'8a2be2',
+    mediumpurple:'9370db', orchid:'da70d6', violet:'ee82ee', plum:'dda0dd',
+    magenta:'ff00ff', deeppink:'ff1493', hotpink:'ff69b4', pink:'ffc0cb',
+    lightpink:'ffb6c1', rosybrown:'bc8f8f', brown:'a52a2a', sienna:'a0522d',
+    saddlebrown:'8b4513', chocolate:'d2691e', peru:'cd853f', tan:'d2b48c',
+    wheat:'f5deb3', burlywood:'deb887', bisque:'ffe4c4', peachpuff:'ffdab9',
+    lavender:'e6e6fa', thistle:'d8bfd8', mistyrose:'ffe4e1', rossocorsa:'da291c'
+  };
+
+  const el = id => document.getElementById(id);
+  const chip = el('chip'), chipColor = el('chipColor'), chipHex = el('chipHex'),
+        chipMeta = el('chipMeta'), input = el('hex'), picker = el('picker'),
+        status = el('status'), downloadBtn = el('download'), recentsEl = el('recents');
+
+  let state = { hex: 'da291c', style: 'flat', format: 'png', size: 1024 };
+  let statusTimer;
+
+  /* ---------- colour maths ---------- */
+
+  function normalise(raw) {
+    let s = String(raw).trim().replace(/^#/, '').replace(/[^0-9a-fA-F]/g, '').toLowerCase();
+    if (s.length === 4) s = s.slice(0, 3);          // #rgba -> #rgb
+    if (s.length === 3) s = s.split('').map(c => c + c).join('');
+    if (s.length === 8) s = s.slice(0, 6);          // #rrggbbaa -> #rrggbb
+    return s.length === 6 ? s : null;
+  }
+
+  const toRgb = hex => ({
+    r: parseInt(hex.slice(0, 2), 16),
+    g: parseInt(hex.slice(2, 4), 16),
+    b: parseInt(hex.slice(4, 6), 16)
+  });
+
+  function toHsl({ r, g, b }) {
+    const rn = r / 255, gn = g / 255, bn = b / 255;
+    const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
+    const l = (max + min) / 2;
+    const d = max - min;
+    if (!d) return { h: 0, s: 0, l: Math.round(l * 100) };
+    const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    let h;
+    if (max === rn) h = ((gn - bn) / d + (gn < bn ? 6 : 0));
+    else if (max === gn) h = (bn - rn) / d + 2;
+    else h = (rn - gn) / d + 4;
+    return { h: Math.round(h * 60), s: Math.round(s * 100), l: Math.round(l * 100) };
+  }
+
+  function nearestName(hex) {
+    const c = toRgb(hex);
+    let best = null, bestD = Infinity;
+    for (const [name, value] of Object.entries(NAMES)) {
+      const n = toRgb(value);
+      // weighted euclidean — cheap and closer to perceived difference than plain RGB
+      const d = 2 * (c.r - n.r) ** 2 + 4 * (c.g - n.g) ** 2 + 3 * (c.b - n.b) ** 2;
+      if (d < bestD) { bestD = d; best = name; }
+    }
+    return best.replace(/^(dark|light|medium|deep|pale)/, '$1 ')
+               .replace(/(gray|green|blue|red|pink|violet|orange|brown|cyan|corsa)$/, ' $1')
+               .trim().replace(/\s+/g, ' ')
+               .replace(/\b\w/g, m => m.toUpperCase());
+  }
+
+  /* ---------- rendering ---------- */
+
+  function say(message) {
+    status.textContent = message;
+    clearTimeout(statusTimer);
+    statusTimer = setTimeout(() => { status.textContent = 'Enter to download'; }, 2000);
+  }
+
+  function render() {
+    const hex = state.hex;
+    const rgb = toRgb(hex);
+    const hsl = toHsl(rgb);
+    const display = '#' + hex.toUpperCase();
+
+    document.documentElement.style.setProperty('--swatch', '#' + hex);
+    chipColor.style.background = '#' + hex;
+    chipHex.textContent = display;
+    chipMeta.textContent = `R ${rgb.r} · G ${rgb.g} · B ${rgb.b}`;
+    el('outHex').textContent = display;
+    el('outRgb').textContent = `${rgb.r}, ${rgb.g}, ${rgb.b}`;
+    el('outHsl').textContent = `${hsl.h}, ${hsl.s}%, ${hsl.l}%`;
+    el('outName').textContent = nearestName(hex);
+    picker.value = '#' + hex;
+    downloadBtn.textContent = 'Download ' + state.format.toUpperCase();
+
+    // the chip preview doubles as the chip export preview; flat mode hides the label
+    chip.style.padding = state.style === 'flat' ? '0' : '22px 22px 0';
+    chip.querySelector('.chip-label').style.display = state.style === 'flat' ? 'none' : 'block';
+
+    el('sizeSeg').style.opacity = state.style === 'chip' ? '0.4' : '1';
+    el('sizeSeg').style.pointerEvents = state.style === 'chip' ? 'none' : 'auto';
+
+    if (location.hash.slice(1).toLowerCase() !== hex) {
+      history.replaceState(null, '', '#' + hex);
+    }
+  }
+
+  function setHex(raw, { sync = true } = {}) {
+    const hex = normalise(raw);
+    if (!hex) { input.classList.add('invalid'); return false; }
+    input.classList.remove('invalid');
+    state.hex = hex;
+    if (sync) input.value = hex.toUpperCase();
+    render();
+    return true;
+  }
+
+  /* ---------- recents ---------- */
+
+  function loadRecents() {
+    try { return JSON.parse(localStorage.getItem('swatch.recents') || '[]'); }
+    catch { return []; }
+  }
+
+  function pushRecent(hex) {
+    const list = [hex, ...loadRecents().filter(h => h !== hex)].slice(0, 12);
+    try { localStorage.setItem('swatch.recents', JSON.stringify(list)); } catch {}
+    paintRecents(list);
+  }
+
+  function paintRecents(list = loadRecents()) {
+    recentsEl.innerHTML = '';
+    for (const hex of list) {
+      const b = document.createElement('button');
+      b.style.background = '#' + hex;
+      b.title = '#' + hex.toUpperCase();
+      b.setAttribute('aria-label', 'Use #' + hex.toUpperCase());
+      b.addEventListener('click', () => setHex(hex));
+      recentsEl.appendChild(b);
+    }
+  }
+
+  /* ---------- export ---------- */
+
+  const CHIP = { w: 1200, h: 1560, pad: 84 };
+
+  function drawChip(ctx, hex) {
+    const { w, h, pad } = CHIP;
+    const block = w - pad * 2;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#' + hex;
+    ctx.fillRect(pad, pad, block, block);
+
+    const rgb = toRgb(hex);
+    const family = "'Inter', -apple-system, system-ui, sans-serif";
+    ctx.fillStyle = '#181818';
+    ctx.textBaseline = 'alphabetic';
+    ctx.font = `500 96px ${family}`;
+    ctx.fillText('#' + hex.toUpperCase(), pad, pad + block + 156);
+
+    ctx.fillStyle = '#666666';
+    ctx.font = `600 38px ${family}`;
+    const meta = `R ${rgb.r}   G ${rgb.g}   B ${rgb.b}`;
+    // canvas has no letter-spacing everywhere yet, so space the tracking by hand
+    if ('letterSpacing' in ctx) {
+      ctx.letterSpacing = '4px';
+      ctx.fillText(meta, pad, pad + block + 218);
+      ctx.letterSpacing = '0px';
+    } else {
+      ctx.fillText(meta, pad, pad + block + 218);
+    }
+  }
+
+  async function raster(hex, format) {
+    const isChip = state.style === 'chip';
+    const w = isChip ? CHIP.w : state.size;
+    const h = isChip ? CHIP.h : state.size;
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+
+    if (isChip) {
+      try { await document.fonts.ready; } catch {}
+      drawChip(ctx, hex);
+    } else {
+      ctx.fillStyle = '#' + hex;
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    const mime = format === 'jpg' ? 'image/jpeg' : 'image/png';
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(b => b ? resolve(b) : reject(new Error('encode failed')), mime, 0.95);
+    });
+  }
+
+  function svg(hex) {
+    const up = '#' + hex.toUpperCase();
+    if (state.style === 'flat') {
+      const s = state.size;
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}">
+  <title>${up}</title>
+  <rect width="${s}" height="${s}" fill="${up}"/>
+</svg>
+`;
+    }
+    const { w, h, pad } = CHIP;
+    const block = w - pad * 2;
+    const rgb = toRgb(hex);
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+  <title>${up}</title>
+  <rect width="${w}" height="${h}" fill="#FFFFFF"/>
+  <rect x="${pad}" y="${pad}" width="${block}" height="${block}" fill="${up}"/>
+  <text x="${pad}" y="${pad + block + 156}" fill="#181818"
+        font-family="Inter, -apple-system, system-ui, sans-serif"
+        font-size="96" font-weight="500">${up}</text>
+  <text x="${pad}" y="${pad + block + 218}" fill="#666666"
+        font-family="Inter, -apple-system, system-ui, sans-serif"
+        font-size="38" font-weight="600" letter-spacing="4">R ${rgb.r}   G ${rgb.g}   B ${rgb.b}</text>
+</svg>
+`;
+  }
+
+  async function exportImage() {
+    const hex = state.hex;
+    const { format, style } = state;
+    try {
+      const blob = format === 'svg'
+        ? new Blob([svg(hex)], { type: 'image/svg+xml' })
+        : await raster(hex, format);
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${hex}-${style}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+      pushRecent(hex);
+      say(`Saved ${hex}-${style}.${format}`);
+    } catch (err) {
+      say('Export failed — ' + err.message);
+    }
+  }
+
+  /* ---------- wiring ---------- */
+
+  input.addEventListener('input', () => {
+    const hex = normalise(input.value);
+    if (hex) { input.classList.remove('invalid'); state.hex = hex; render(); }
+    else { input.classList.add('invalid'); }
+  });
+
+  input.addEventListener('blur', () => setHex(input.value || state.hex));
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); setHex(input.value); exportImage(); }
+  });
+
+  picker.addEventListener('input', () => setHex(picker.value));
+
+  el('random').addEventListener('click', () => {
+    setHex(Math.floor(Math.random() * 0x1000000).toString(16).padStart(6, '0'));
+  });
+
+  downloadBtn.addEventListener('click', exportImage);
+
+  function segment(id, key, cast = v => v) {
+    el(id).addEventListener('click', e => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      state[key] = cast(btn.dataset[key]);
+      for (const b of el(id).querySelectorAll('button')) {
+        b.setAttribute('aria-pressed', String(b === btn));
+      }
+      render();
+    });
+  }
+  segment('styleSeg', 'style');
+  segment('formatSeg', 'format');
+  segment('sizeSeg', 'size', Number);
+
+  document.addEventListener('click', async e => {
+    const btn = e.target.closest('.copy');
+    if (!btn) return;
+    const text = el('out' + btn.dataset.copy[0].toUpperCase() + btn.dataset.copy.slice(1)).textContent;
+    try { await navigator.clipboard.writeText(text); say('Copied ' + text); }
+    catch { say('Copy blocked by the browser'); }
+  });
+
+  window.addEventListener('hashchange', () => {
+    const hex = normalise(location.hash);
+    if (hex && hex !== state.hex) setHex(hex);
+  });
+
+  setHex(normalise(location.hash) || 'da291c');
+  paintRecents();
+})();
+</script>
+</body>
+</html>
