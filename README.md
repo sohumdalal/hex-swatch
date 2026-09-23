@@ -18,27 +18,51 @@ Opening `index.html` directly (`file://`) works too — the only thing that need
 
 ## What it does
 
+**A different colour every load.** The page hydrates with one of eight seeds rather
+than always opening on Rosso Corsa — five are the only chromatic tokens in the
+Ferrari library (`../DESIGN.md` is otherwise greys), three are pigments in the same
+register. It never repeats the colour you saw last time.
+
+| | |
+|---|---|
+| `#da291c` Rosso Corsa | `colors.primary` |
+| `#f13a2c` bright red-orange | `colors.semantic-warning` |
+| `#fff200` Hypersail yellow | `colors.accent-yellow-hypersail` |
+| `#4c98b9` dusty blue | `colors.semantic-info` |
+| `#03904a` racing green | `colors.semantic-success` |
+| `#002fa7` Klein Blue | added |
+| `#004225` British Racing Green | added |
+| `#ff4f00` International Orange | added |
+
 **Two export styles**
 
-- **Flat** — the colour, edge to edge, at 512 / 1024 / 2048 px square. This is the
-  one you actually want most days.
-- **Chip** — a Pantone/Polaroid-style card: white frame, square colour block, hex
-  and RGB set beneath it. 1200 × 1560.
+- **Chip** (the default) — a Pantone/Polaroid-style card: white frame, square colour
+  block, hex and RGB set beneath it. Exports at your chosen width × 1.3.
+- **Flat** — the colour, edge to edge, square. The one you want most days.
 
-**Three formats** — PNG, JPG (quality 0.95), SVG. Flat SVG is three lines of markup
-and scales forever; chip SVG carries the labels as real text.
+**Three formats** — PNG, JPG (quality 0.95), SVG at 512 / 1024 / 2048 px wide. The
+preview is a true scale model of the file: both are drawn from the same 1200-wide
+geometry, the preview via container query units and the export via a canvas scale.
 
 **Input** — type any of `da291c`, `#DA291C`, `abc`, `#abcd`, `#rrggbbaa`; the field
 normalises as you type and turns Rosso Corsa when it can't parse. There's also the
-native colour picker and a dice button for a random colour.
+native colour picker and a dice button for a genuinely random colour.
 
-**Readouts** — HEX, RGB, HSL, each with a copy button, plus the nearest named CSS
-colour (a weighted RGB distance against ~110 names — a label, not a colour science
-claim).
+**Values dropdown** — HEX, RGB, HSL and the nearest named colour, each a click to
+copy. It's a dropdown that overlays rather than pushes, which is what keeps the page
+scroll-free; the trigger shows the colour's name at a glance. Nearest-name is a
+weighted RGB distance against ~110 names — a label, not a colour science claim.
 
-**Niceties** — the hex lives in the URL hash, so `localhost:4171/#0f4c81` opens on
-that colour and links are shareable. `Enter` downloads. The last 12 colours you
-exported sit at the bottom in `localStorage`.
+**Niceties** — `Enter` downloads. `localhost:4171/#0f4c81` opens straight onto that
+colour, so links still work; without a hash every refresh rotates the seed. The last
+seven colours you exported sit at the bottom in `localStorage`.
+
+## Layout
+
+Nothing scrolls. The whole composition is sized off one custom property —
+`--stage: clamp(240px, 62dvh, 620px)` — with the swatch on the left and a compact
+control panel on the right, collapsing to one column under 760px. A window shorter
+than 420px gets a scrollbar rather than a crop.
 
 ## Design
 
@@ -47,7 +71,7 @@ here as `DESIGN.md`: `#181818` canvas, Rosso Corsa reserved for the single downl
 CTA, sharp 0px corners, uppercase button type at 1.4px tracking, the 8px spacing
 ladder, and Inter standing in for FerrariSans.
 
-## Layout
+## Files
 
 ```
 hex-swatch/

@@ -23,76 +23,88 @@
     --canvas-light: #ffffff;
     --on-light: #181818;
 
-    --xxxs: 4px; --xxs: 8px; --xs: 16px; --sm: 24px; --md: 32px; --lg: 48px; --xl: 64px;
+    --xxxs: 4px; --xxs: 8px; --xs: 16px; --sm: 24px; --md: 32px;
     --font: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+
+    /* the whole layout is sized off this — the page never scrolls */
+    --stage: clamp(240px, 62dvh, 620px);
   }
 
   * { box-sizing: border-box; }
 
-  html { height: 100%; }
-
   body {
     margin: 0;
-    min-height: 100%;
+    height: 100dvh;
+    overflow: hidden;
     background: var(--canvas);
     color: var(--ink);
     font-family: var(--font);
     font-size: 14px;
-    font-weight: 400;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--lg) var(--xs);
+    display: grid;
+    place-items: center;
+    padding: var(--sm);
   }
 
   main {
-    margin: auto;              /* keeps the top from clipping when taller than the viewport */
-    width: 100%;
-    max-width: 420px;
+    display: grid;
+    grid-template-columns: var(--stage) minmax(300px, 336px);
+    align-items: center;
+    gap: var(--md);
+    max-height: 100%;
+  }
+
+  /* --- left: the swatch, square stage so flat/chip never shifts the layout --- */
+  .stage { width: var(--stage); height: var(--stage); display: grid; place-items: center; }
+
+  .chip {
+    height: 100%;
+    aspect-ratio: 1200 / 1560;
+    container-type: inline-size;
+    background: var(--canvas-light);
+    padding: 7% 7% 0;
+    margin: 0;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: var(--sm);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05);
   }
+  .chip[data-style="flat"] { aspect-ratio: 1 / 1; padding: 0; }
+  .chip[data-style="flat"] .chip-label { display: none; }
 
-  /* --- masthead --- */
-  .masthead { display: flex; align-items: center; gap: 10px; }
-  .mark { width: 14px; height: 14px; background: var(--primary); flex-shrink: 0; }
-  .wordmark {
-    font-size: 13px; font-weight: 600; letter-spacing: 1.1px;
-    text-transform: uppercase; margin: 0;
-  }
-  .wordmark span { color: var(--muted); }
-
-  /* --- the chip --- */
-  .chip {
-    width: 100%;
-    background: var(--canvas-light);
-    padding: 22px 22px 0;
-    display: block;
-    box-shadow: 0 0 0 1px rgba(255,255,255,0.04);
-  }
   .chip-color {
     width: 100%;
     aspect-ratio: 1 / 1;
     background: var(--swatch, #da291c);
     transition: background 120ms linear;
   }
-  .chip-label { padding: 18px 0 26px; color: var(--on-light); }
+  .chip[data-style="flat"] .chip-color { height: 100%; }
+
+  /* cqw keeps the preview a true scale model of the exported file */
+  .chip-label { padding-top: 6cqw; color: var(--on-light); }
   .chip-hex {
-    font-size: 26px; font-weight: 500; letter-spacing: 0.195px;
-    line-height: 1.2; text-transform: uppercase; margin: 0;
+    font-size: 8cqw; font-weight: 500; line-height: 1;
+    letter-spacing: -0.01em; margin: 0;
   }
   .chip-meta {
-    font-size: 11px; font-weight: 600; letter-spacing: 1.1px;
-    text-transform: uppercase; color: #666; margin: 6px 0 0;
+    font-size: 3.2cqw; font-weight: 600; line-height: 1;
+    letter-spacing: 0.33cqw; color: #666;
+    margin: 1.6cqw 0 0;
   }
 
-  /* --- input row --- */
-  .input-row { display: flex; width: 100%; gap: var(--xxs); }
-  .field { position: relative; flex: 1; }
+  /* --- right: controls --- */
+  .panel { display: flex; flex-direction: column; gap: var(--xs); min-width: 0; }
+
+  .masthead { display: flex; align-items: center; gap: 10px; }
+  .mark { width: 12px; height: 12px; background: var(--primary); flex-shrink: 0; }
+  .wordmark {
+    font-size: 12px; font-weight: 600; letter-spacing: 1.1px;
+    text-transform: uppercase; margin: 0;
+  }
+  .wordmark span { color: var(--muted); }
+
+  .input-row { display: flex; gap: var(--xxs); }
+  .field { position: relative; flex: 1; min-width: 0; }
   .field::before {
     content: '#';
     position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
@@ -100,7 +112,7 @@
   }
   input[type="text"] {
     width: 100%; height: 48px;
-    padding: 14px 16px 14px 30px;
+    padding: 14px 14px 14px 30px;
     background: var(--canvas);
     border: 1px solid var(--hairline);
     border-radius: 4px;
@@ -117,12 +129,11 @@
     border: 1px solid var(--hairline);
     border-radius: 4px;
     color: var(--body);
-    font-family: var(--font); font-size: 16px;
     cursor: pointer; padding: 0;
     display: grid; place-items: center;
   }
   .icon-btn:hover { border-color: var(--ink); color: var(--ink); }
-  .icon-btn svg { width: 18px; height: 18px; }
+  .icon-btn svg { width: 17px; height: 17px; }
 
   .picker { position: relative; width: 48px; height: 48px; flex-shrink: 0; }
   .picker input[type="color"] {
@@ -137,157 +148,194 @@
   }
   .picker:hover .picker-face { border-color: var(--ink); }
 
-  /* --- readouts --- */
-  .readouts {
-    width: 100%;
-    border-top: 1px solid var(--hairline);
-    border-bottom: 1px solid var(--hairline);
+  /* readouts — a dropdown, so the values never take up standing height.
+     It overlays rather than pushes, which is what keeps the page scroll-free. */
+  .values { position: relative; }
+  .values-trigger {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--xxs);
+    width: 100%; height: 38px; padding: 0 12px;
+    background: transparent; border: 1px solid var(--hairline);
+    color: var(--ink); cursor: pointer;
+    font-family: var(--font); text-align: left;
   }
-  .readout {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: var(--xs); padding: 11px 0;
-    border-top: 1px solid var(--hairline);
+  .values-trigger:hover { border-color: var(--body); }
+  .values-trigger[aria-expanded="true"] { border-color: var(--ink); }
+  .values-trigger .k {
+    font-size: 10px; font-weight: 600; letter-spacing: 1.1px;
+    text-transform: uppercase; color: var(--muted); flex-shrink: 0;
   }
-  .readout:first-child { border-top: 0; }
-  .readout dt {
-    font-size: 11px; font-weight: 600; letter-spacing: 1.1px;
-    text-transform: uppercase; color: var(--muted); margin: 0;
+  .values-trigger .current {
+    margin-left: auto;
+    font-size: 13px; color: var(--ink); font-variant-numeric: tabular-nums;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .readout dd {
-    margin: 0; font-size: 13px; font-weight: 400; color: var(--ink);
-    font-variant-numeric: tabular-nums;
-    display: flex; align-items: center; gap: var(--xxs);
+  .chev {
+    width: 9px; height: 9px; flex-shrink: 0;
+    border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted);
+    transform: translateY(-2px) rotate(45deg);
+    transition: transform 120ms ease;
   }
-  .copy {
-    background: transparent; border: 0; padding: 2px 0; cursor: pointer;
-    color: var(--muted); font-family: var(--font);
-    font-size: 11px; font-weight: 600; letter-spacing: 1.1px; text-transform: uppercase;
+  .values-trigger[aria-expanded="true"] .chev {
+    transform: translateY(2px) rotate(225deg);
+    border-color: var(--ink);
   }
-  .copy:hover { color: var(--ink); }
 
-  /* --- segmented controls --- */
-  .controls { width: 100%; display: flex; flex-direction: column; gap: var(--xxs); }
-  .seg { display: flex; border: 1px solid var(--hairline); border-radius: 0; }
+  .values-menu {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 10;
+    background: var(--canvas-elevated);
+    border: 1px solid var(--muted);
+  }
+  .value-row {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--xs);
+    width: 100%; padding: 7px 12px; line-height: 1.3;
+    background: transparent; border: 0; border-top: 1px solid rgba(255, 255, 255, 0.07);
+    cursor: pointer; font-family: var(--font); text-align: left;
+  }
+  .value-row:first-child { border-top: 0; }
+  .value-row:hover { background: rgba(255, 255, 255, 0.06); }
+  .value-row .k {
+    font-size: 10px; font-weight: 600; letter-spacing: 1.1px;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .value-row .v {
+    font-size: 13px; color: var(--ink); font-variant-numeric: tabular-nums;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* segmented controls */
+  .seg-row { display: flex; gap: var(--xxs); }
+  .seg { display: flex; border: 1px solid var(--hairline); flex: 1; min-width: 0; }
+  .seg.style { flex: 2; }
+  .seg.format { flex: 3; }
   .seg button {
-    flex: 1; height: 40px;
+    flex: 1; height: 38px; min-width: 0;
     background: transparent; border: 0; border-left: 1px solid var(--hairline);
     color: var(--body); cursor: pointer;
-    font-family: var(--font); font-size: 11px; font-weight: 600;
+    font-family: var(--font); font-size: 10px; font-weight: 600;
     letter-spacing: 1.1px; text-transform: uppercase;
   }
   .seg button:first-child { border-left: 0; }
   .seg button:hover { color: var(--ink); }
   .seg button[aria-pressed="true"] { background: var(--canvas-elevated); color: var(--ink); }
 
-  /* --- download --- */
   .download {
-    width: 100%; height: 48px;
+    height: 48px;
     background: var(--primary); color: #fff;
-    border: 0; border-radius: 0; cursor: pointer;
+    border: 0; cursor: pointer;
     font-family: var(--font); font-size: 14px; font-weight: 700;
     letter-spacing: 1.4px; text-transform: uppercase;
-    padding: 14px 32px;
   }
   .download:hover { background: var(--primary-hover); }
   .download:active { background: var(--primary-active); }
 
-  /* --- recents --- */
-  .recents { width: 100%; display: flex; flex-wrap: wrap; gap: var(--xxxs); min-height: 28px; }
+  .tray {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--xs); min-height: 22px;
+  }
+  .recents { display: flex; gap: var(--xxxs); }
   .recents button {
-    width: 28px; height: 28px; border: 1px solid var(--hairline);
-    padding: 0; cursor: pointer; border-radius: 0;
+    width: 22px; height: 22px; border: 1px solid var(--hairline);
+    padding: 0; cursor: pointer;
   }
   .recents button:hover { border-color: var(--ink); }
-
-  footer {
-    font-size: 11px; font-weight: 600; letter-spacing: 1.1px;
-    text-transform: uppercase; color: var(--muted); text-align: center;
+  .hint {
+    font-size: 10px; font-weight: 600; letter-spacing: 1.1px;
+    text-transform: uppercase; color: var(--muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
 
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
-  @media (max-width: 420px) {
-    body { padding: var(--sm) var(--xs); }
-    .chip-hex { font-size: 22px; }
+  /* one column when there isn't room for two — chip shrinks to keep it scroll-free */
+  @media (max-width: 760px) {
+    :root { --stage: clamp(150px, 34dvh, 300px); }
+    body { padding: var(--xs); }
+    main { grid-template-columns: minmax(0, 340px); gap: var(--xs); justify-items: center; }
+    .panel { width: 100%; gap: 10px; }
   }
+  /* last resort: a window too short for the design gets a scroll rather than a crop */
+  @media (max-height: 420px) { body { overflow: auto; } }
 </style>
 </head>
 <body>
 <main>
-  <div class="masthead">
-    <div class="mark"></div>
-    <h1 class="wordmark">Swatch <span>/ hex to image</span></h1>
+  <div class="stage">
+    <figure class="chip" id="chip" data-style="chip">
+      <div class="chip-color" id="chipColor"></div>
+      <figcaption class="chip-label">
+        <p class="chip-hex" id="chipHex">#DA291C</p>
+        <p class="chip-meta" id="chipMeta">R 218 G 41 B 28</p>
+      </figcaption>
+    </figure>
   </div>
 
-  <figure class="chip" id="chip">
-    <div class="chip-color" id="chipColor"></div>
-    <figcaption class="chip-label">
-      <p class="chip-hex" id="chipHex">#DA291C</p>
-      <p class="chip-meta" id="chipMeta">R 218 · G 41 · B 28</p>
-    </figcaption>
-  </figure>
+  <div class="panel">
+    <div class="masthead">
+      <div class="mark"></div>
+      <h1 class="wordmark">Swatch <span>/ hex to image</span></h1>
+    </div>
 
-  <div class="input-row">
-    <div class="field">
-      <label class="sr" for="hex">Hex colour</label>
-      <input id="hex" type="text" value="DA291C" spellcheck="false" autocomplete="off"
-             autocapitalize="off" maxlength="7" placeholder="DA291C" inputmode="latin">
+    <div class="input-row">
+      <div class="field">
+        <label class="sr" for="hex">Hex colour</label>
+        <input id="hex" type="text" value="DA291C" spellcheck="false" autocomplete="off"
+               autocapitalize="off" maxlength="9" placeholder="DA291C">
+      </div>
+      <div class="picker" title="Pick visually">
+        <input id="picker" type="color" value="#da291c" aria-label="Pick a colour visually">
+        <div class="picker-face"></div>
+      </div>
+      <button class="icon-btn" id="random" title="Random colour" aria-label="Random colour">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <rect x="3" y="3" width="18" height="18" rx="1"/>
+          <circle cx="8.5" cy="8.5" r="1.4" fill="currentColor" stroke="none"/>
+          <circle cx="15.5" cy="15.5" r="1.4" fill="currentColor" stroke="none"/>
+          <circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/>
+        </svg>
+      </button>
     </div>
-    <div class="picker" title="Pick visually">
-      <input id="picker" type="color" value="#da291c" aria-label="Pick a colour visually">
-      <div class="picker-face"></div>
+
+    <div class="values">
+      <button class="values-trigger" id="valuesTrigger" aria-expanded="false" aria-controls="valuesMenu">
+        <span class="k">Values</span>
+        <span class="current" id="valuesCurrent">Rosso Corsa</span>
+        <span class="chev" aria-hidden="true"></span>
+      </button>
+      <div class="values-menu" id="valuesMenu" hidden>
+        <button class="value-row" data-copy="Hex"><span class="k">Hex</span><span class="v" id="outHex">#DA291C</span></button>
+        <button class="value-row" data-copy="Rgb"><span class="k">RGB</span><span class="v" id="outRgb">218, 41, 28</span></button>
+        <button class="value-row" data-copy="Hsl"><span class="k">HSL</span><span class="v" id="outHsl">3, 77%, 48%</span></button>
+        <button class="value-row" data-copy="Name"><span class="k">Nearest</span><span class="v" id="outName">Rosso Corsa</span></button>
+      </div>
     </div>
-    <button class="icon-btn" id="random" title="Random colour" aria-label="Random colour">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-        <rect x="3" y="3" width="18" height="18" rx="1"/>
-        <circle cx="8.5" cy="8.5" r="1.4" fill="currentColor" stroke="none"/>
-        <circle cx="15.5" cy="15.5" r="1.4" fill="currentColor" stroke="none"/>
-        <circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/>
-      </svg>
-    </button>
+
+    <div class="seg-row">
+      <div class="seg style" id="styleSeg" role="group" aria-label="Export style">
+        <button data-style="chip" aria-pressed="true">Chip</button>
+        <button data-style="flat" aria-pressed="false">Flat</button>
+      </div>
+      <div class="seg format" id="formatSeg" role="group" aria-label="File format">
+        <button data-format="png" aria-pressed="true">PNG</button>
+        <button data-format="jpg" aria-pressed="false">JPG</button>
+        <button data-format="svg" aria-pressed="false">SVG</button>
+      </div>
+    </div>
+
+    <div class="seg-row">
+      <div class="seg" id="sizeSeg" role="group" aria-label="Pixel width">
+        <button data-size="512" aria-pressed="false">512</button>
+        <button data-size="1024" aria-pressed="true">1024</button>
+        <button data-size="2048" aria-pressed="false">2048</button>
+      </div>
+    </div>
+
+    <button class="download" id="download">Download PNG</button>
+
+    <div class="tray">
+      <div class="recents" id="recents" aria-label="Recent colours"></div>
+      <span class="hint" id="status">Enter to download</span>
+    </div>
   </div>
-
-  <dl class="readouts">
-    <div class="readout">
-      <dt>Hex</dt>
-      <dd><span id="outHex">#DA291C</span><button class="copy" data-copy="hex">Copy</button></dd>
-    </div>
-    <div class="readout">
-      <dt>RGB</dt>
-      <dd><span id="outRgb">218, 41, 28</span><button class="copy" data-copy="rgb">Copy</button></dd>
-    </div>
-    <div class="readout">
-      <dt>HSL</dt>
-      <dd><span id="outHsl">3, 77%, 48%</span><button class="copy" data-copy="hsl">Copy</button></dd>
-    </div>
-    <div class="readout">
-      <dt>Nearest</dt>
-      <dd><span id="outName">Firebrick</span></dd>
-    </div>
-  </dl>
-
-  <div class="controls">
-    <div class="seg" id="styleSeg" role="group" aria-label="Export style">
-      <button data-style="flat" aria-pressed="true">Flat</button>
-      <button data-style="chip" aria-pressed="false">Chip</button>
-    </div>
-    <div class="seg" id="formatSeg" role="group" aria-label="File format">
-      <button data-format="png" aria-pressed="true">PNG</button>
-      <button data-format="jpg" aria-pressed="false">JPG</button>
-      <button data-format="svg" aria-pressed="false">SVG</button>
-    </div>
-    <div class="seg" id="sizeSeg" role="group" aria-label="Pixel size">
-      <button data-size="512" aria-pressed="false">512</button>
-      <button data-size="1024" aria-pressed="true">1024</button>
-      <button data-size="2048" aria-pressed="false">2048</button>
-    </div>
-  </div>
-
-  <button class="download" id="download">Download PNG</button>
-
-  <div class="recents" id="recents" aria-label="Recent colours"></div>
-
-  <footer id="status">Enter to download</footer>
 </main>
 
 <script>
@@ -319,15 +367,40 @@
     lightpink:'ffb6c1', rosybrown:'bc8f8f', brown:'a52a2a', sienna:'a0522d',
     saddlebrown:'8b4513', chocolate:'d2691e', peru:'cd853f', tan:'d2b48c',
     wheat:'f5deb3', burlywood:'deb887', bisque:'ffe4c4', peachpuff:'ffdab9',
-    lavender:'e6e6fa', thistle:'d8bfd8', mistyrose:'ffe4e1', rossocorsa:'da291c'
+    lavender:'e6e6fa', thistle:'d8bfd8', mistyrose:'ffe4e1',
+    rossocorsa:'da291c', kleinblue:'002fa7', racinggreen:'004225',
+    internationalorange:'ff4f00'
   };
+
+  // Every load hydrates a different colour. Five are the chromatic tokens from the
+  // Ferrari library (../DESIGN.md) — the rest of that palette is greys — plus three
+  // pigments in the same automotive-editorial register.
+  const SEEDS = [
+    'da291c',  // Rosso Corsa       — colors.primary
+    'f13a2c',  // bright red-orange — colors.semantic-warning
+    'fff200',  // Hypersail yellow  — colors.accent-yellow-hypersail
+    '4c98b9',  // dusty blue        — colors.semantic-info
+    '03904a',  // racing green      — colors.semantic-success
+    '002fa7',  // Klein Blue
+    '004225',  // British Racing Green
+    'ff4f00'   // International Orange
+  ];
+
+  function seedColour() {
+    let last = null;
+    try { last = localStorage.getItem('swatch.seed'); } catch {}
+    const pool = SEEDS.filter(s => s !== last);
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    try { localStorage.setItem('swatch.seed', pick); } catch {}
+    return pick;
+  }
 
   const el = id => document.getElementById(id);
   const chip = el('chip'), chipColor = el('chipColor'), chipHex = el('chipHex'),
         chipMeta = el('chipMeta'), input = el('hex'), picker = el('picker'),
         status = el('status'), downloadBtn = el('download'), recentsEl = el('recents');
 
-  let state = { hex: 'da291c', style: 'flat', format: 'png', size: 1024 };
+  let state = { hex: 'da291c', style: 'chip', format: 'png', size: 1024 };
   let statusTimer;
 
   /* ---------- colour maths ---------- */
@@ -365,7 +438,7 @@
     let best = null, bestD = Infinity;
     for (const [name, value] of Object.entries(NAMES)) {
       const n = toRgb(value);
-      // weighted euclidean — cheap and closer to perceived difference than plain RGB
+      // weighted euclidean — cheap, and closer to perceived difference than plain RGB
       const d = 2 * (c.r - n.r) ** 2 + 4 * (c.g - n.g) ** 2 + 3 * (c.b - n.b) ** 2;
       if (d < bestD) { bestD = d; best = name; }
     }
@@ -380,7 +453,7 @@
   function say(message) {
     status.textContent = message;
     clearTimeout(statusTimer);
-    statusTimer = setTimeout(() => { status.textContent = 'Enter to download'; }, 2000);
+    statusTimer = setTimeout(() => { status.textContent = 'Enter to download'; }, 2200);
   }
 
   function render() {
@@ -391,25 +464,16 @@
 
     document.documentElement.style.setProperty('--swatch', '#' + hex);
     chipColor.style.background = '#' + hex;
+    chip.dataset.style = state.style;
     chipHex.textContent = display;
-    chipMeta.textContent = `R ${rgb.r} · G ${rgb.g} · B ${rgb.b}`;
+    chipMeta.textContent = `R ${rgb.r}   G ${rgb.g}   B ${rgb.b}`;
     el('outHex').textContent = display;
     el('outRgb').textContent = `${rgb.r}, ${rgb.g}, ${rgb.b}`;
     el('outHsl').textContent = `${hsl.h}, ${hsl.s}%, ${hsl.l}%`;
     el('outName').textContent = nearestName(hex);
+    el('valuesCurrent').textContent = el('outName').textContent;
     picker.value = '#' + hex;
     downloadBtn.textContent = 'Download ' + state.format.toUpperCase();
-
-    // the chip preview doubles as the chip export preview; flat mode hides the label
-    chip.style.padding = state.style === 'flat' ? '0' : '22px 22px 0';
-    chip.querySelector('.chip-label').style.display = state.style === 'flat' ? 'none' : 'block';
-
-    el('sizeSeg').style.opacity = state.style === 'chip' ? '0.4' : '1';
-    el('sizeSeg').style.pointerEvents = state.style === 'chip' ? 'none' : 'auto';
-
-    if (location.hash.slice(1).toLowerCase() !== hex) {
-      history.replaceState(null, '', '#' + hex);
-    }
   }
 
   function setHex(raw, { sync = true } = {}) {
@@ -430,14 +494,14 @@
   }
 
   function pushRecent(hex) {
-    const list = [hex, ...loadRecents().filter(h => h !== hex)].slice(0, 12);
+    const list = [hex, ...loadRecents().filter(h => h !== hex)].slice(0, 7);
     try { localStorage.setItem('swatch.recents', JSON.stringify(list)); } catch {}
     paintRecents(list);
   }
 
   function paintRecents(list = loadRecents()) {
     recentsEl.innerHTML = '';
-    for (const hex of list) {
+    for (const hex of list.slice(0, 7)) {
       const b = document.createElement('button');
       b.style.background = '#' + hex;
       b.title = '#' + hex.toUpperCase();
@@ -449,6 +513,8 @@
 
   /* ---------- export ---------- */
 
+  // Drawn in a fixed 1200-wide space, then scaled to the chosen size, so the
+  // preview and every export size stay identical in proportion.
   const CHIP = { w: 1200, h: 1560, pad: 84 };
 
   function drawChip(ctx, hex) {
@@ -469,7 +535,6 @@
     ctx.fillStyle = '#666666';
     ctx.font = `600 38px ${family}`;
     const meta = `R ${rgb.r}   G ${rgb.g}   B ${rgb.b}`;
-    // canvas has no letter-spacing everywhere yet, so space the tracking by hand
     if ('letterSpacing' in ctx) {
       ctx.letterSpacing = '4px';
       ctx.fillText(meta, pad, pad + block + 218);
@@ -481,8 +546,8 @@
 
   async function raster(hex, format) {
     const isChip = state.style === 'chip';
-    const w = isChip ? CHIP.w : state.size;
-    const h = isChip ? CHIP.h : state.size;
+    const w = state.size;
+    const h = isChip ? Math.round(w * CHIP.h / CHIP.w) : w;
     const canvas = document.createElement('canvas');
     canvas.width = w;
     canvas.height = h;
@@ -490,6 +555,7 @@
 
     if (isChip) {
       try { await document.fonts.ready; } catch {}
+      ctx.scale(w / CHIP.w, w / CHIP.w);
       drawChip(ctx, hex);
     } else {
       ctx.fillStyle = '#' + hex;
@@ -504,18 +570,18 @@
 
   function svg(hex) {
     const up = '#' + hex.toUpperCase();
+    const size = state.size;
     if (state.style === 'flat') {
-      const s = state.size;
-      return `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}">
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 1 1">
   <title>${up}</title>
-  <rect width="${s}" height="${s}" fill="${up}"/>
+  <rect width="1" height="1" fill="${up}"/>
 </svg>
 `;
     }
     const { w, h, pad } = CHIP;
     const block = w - pad * 2;
     const rgb = toRgb(hex);
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${Math.round(size * h / w)}" viewBox="0 0 ${w} ${h}">
   <title>${up}</title>
   <rect width="${w}" height="${h}" fill="#FFFFFF"/>
   <rect x="${pad}" y="${pad}" width="${block}" height="${block}" fill="${up}"/>
@@ -590,12 +656,32 @@
   segment('formatSeg', 'format');
   segment('sizeSeg', 'size', Number);
 
+  const trigger = el('valuesTrigger'), menu = el('valuesMenu');
+
+  function openValues(open) {
+    menu.hidden = !open;
+    trigger.setAttribute('aria-expanded', String(open));
+  }
+
+  trigger.addEventListener('click', e => {
+    e.stopPropagation();
+    openValues(menu.hidden);
+  });
+
   document.addEventListener('click', async e => {
-    const btn = e.target.closest('.copy');
-    if (!btn) return;
-    const text = el('out' + btn.dataset.copy[0].toUpperCase() + btn.dataset.copy.slice(1)).textContent;
+    const row = e.target.closest('.value-row');
+    if (!row) {
+      if (!e.target.closest('.values')) openValues(false);
+      return;
+    }
+    const text = el('out' + row.dataset.copy).textContent;
+    openValues(false);
     try { await navigator.clipboard.writeText(text); say('Copied ' + text); }
     catch { say('Copy blocked by the browser'); }
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !menu.hidden) { openValues(false); trigger.focus(); }
   });
 
   window.addEventListener('hashchange', () => {
@@ -603,7 +689,7 @@
     if (hex && hex !== state.hex) setHex(hex);
   });
 
-  setHex(normalise(location.hash) || 'da291c');
+  setHex(normalise(location.hash) || seedColour());
   paintRecents();
 })();
 </script>
