@@ -34,10 +34,15 @@ register. It never repeats the colour you saw last time.
 | `#004225` British Racing Green | added |
 | `#ff4f00` International Orange | added |
 
+**The page wears the colour.** The download button and the wordmark square take the
+live swatch, not Rosso Corsa — so every load, dice roll and typed hex re-tints the UI.
+The button's label flips between white and `#181818` at the WCAG luminance crossover
+(0.179), so it stays legible on Hypersail yellow and on Klein Blue alike.
+
 **Two export styles**
 
-- **Chip** (the default) — a Pantone/Polaroid-style card: white frame, square colour
-  block, hex and RGB set beneath it. Exports at your chosen width × 1.3.
+- **Chip** (the default) — two blocks, no frame: a 3:4 card that's 75% colour with a
+  white band beneath carrying the hex. Exports at your chosen width × 4/3.
 - **Flat** — the colour, edge to edge, square. The one you want most days.
 
 **Three formats** — PNG, JPG (quality 0.95), SVG at 512 / 1024 / 2048 px wide. The
@@ -49,13 +54,13 @@ normalises as you type and turns Rosso Corsa when it can't parse. There's also t
 native colour picker and a dice button for a genuinely random colour.
 
 **Values dropdown** — HEX, RGB, HSL and the nearest named colour, each a click to
-copy. It's a dropdown that overlays rather than pushes, which is what keeps the page
-scroll-free; the trigger shows the colour's name at a glance. Nearest-name is a
-weighted RGB distance against ~110 names — a label, not a colour science claim.
+copy. It expands in place on a 260ms `grid-template-rows` transition, pushing the
+controls below it down rather than floating over them. Nearest-name is a weighted RGB
+distance against ~110 names — a label, not a colour science claim.
 
 **Niceties** — `Enter` downloads. `localhost:4171/#0f4c81` opens straight onto that
-colour, so links still work; without a hash every refresh rotates the seed. The last
-seven colours you exported sit at the bottom in `localStorage`.
+colour, so links still work; without a hash every refresh rotates the seed. Copy and
+save confirmations ride on the dropdown's own label, so nothing else takes up height.
 
 ## Layout
 

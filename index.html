@@ -9,11 +9,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23da291c'/></svg>">
 <style>
-  /* Ferrari design system — see ../DESIGN.md */
+  /* Ferrari design system — see ../DESIGN.md.
+     One deliberate departure: the CTA and the wordmark take the live swatch colour
+     instead of Rosso Corsa, so the whole page hydrates with whatever you're holding. */
   :root {
     --primary: #da291c;
-    --primary-hover: #9d2211;
-    --primary-active: #b01e0a;
     --ink: #ffffff;
     --body: #969696;
     --muted: #666666;
@@ -28,6 +28,8 @@
 
     /* the whole layout is sized off this — the page never scrolls */
     --stage: clamp(240px, 62dvh, 620px);
+    --accent: #da291c;
+    --on-accent: #ffffff;
   }
 
   * { box-sizing: border-box; }
@@ -43,60 +45,64 @@
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     display: grid;
-    place-items: center;
+    grid-template-rows: 1fr auto;
+    justify-items: center;
     padding: var(--sm);
   }
 
   main {
+    align-self: center;
     display: grid;
     grid-template-columns: var(--stage) minmax(300px, 336px);
     align-items: center;
     gap: var(--md);
-    max-height: 100%;
   }
 
-  /* --- left: the swatch, square stage so flat/chip never shifts the layout --- */
+  /* --- left: the swatch. Square stage, so flat/chip never shifts the layout --- */
   .stage { width: var(--stage); height: var(--stage); display: grid; place-items: center; }
 
+  /* Two blocks, no frame: colour on top, white band with the hex beneath.
+     3:4 card — the colour is 75% of the height, the band the remaining 25%. */
   .chip {
     height: 100%;
-    aspect-ratio: 1200 / 1560;
+    aspect-ratio: 3 / 4;
     container-type: inline-size;
     background: var(--canvas-light);
-    padding: 7% 7% 0;
     margin: 0;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05);
   }
-  .chip[data-style="flat"] { aspect-ratio: 1 / 1; padding: 0; }
+  .chip[data-style="flat"] { aspect-ratio: 1 / 1; }
   .chip[data-style="flat"] .chip-label { display: none; }
 
   .chip-color {
-    width: 100%;
-    aspect-ratio: 1 / 1;
+    width: 100%; height: 75%;
     background: var(--swatch, #da291c);
-    transition: background 120ms linear;
+    transition: background-color 160ms linear;
   }
   .chip[data-style="flat"] .chip-color { height: 100%; }
 
   /* cqw keeps the preview a true scale model of the exported file */
-  .chip-label { padding-top: 6cqw; color: var(--on-light); }
-  .chip-hex {
-    font-size: 8cqw; font-weight: 500; line-height: 1;
-    letter-spacing: -0.01em; margin: 0;
+  .chip-label {
+    height: 25%;
+    display: flex; align-items: center;
+    padding: 0 6.667cqw;
+    color: var(--on-light);
   }
-  .chip-meta {
-    font-size: 3.2cqw; font-weight: 600; line-height: 1;
-    letter-spacing: 0.33cqw; color: #666;
-    margin: 1.6cqw 0 0;
+  .chip-hex {
+    font-size: 9.333cqw; font-weight: 500; line-height: 1;
+    letter-spacing: -0.01em; margin: 0;
   }
 
   /* --- right: controls --- */
   .panel { display: flex; flex-direction: column; gap: var(--xs); min-width: 0; }
 
   .masthead { display: flex; align-items: center; gap: 10px; }
-  .mark { width: 12px; height: 12px; background: var(--primary); flex-shrink: 0; }
+  .mark {
+    width: 12px; height: 12px; flex-shrink: 0;
+    background: var(--accent);
+    transition: background-color 160ms linear;
+  }
   .wordmark {
     font-size: 12px; font-weight: 600; letter-spacing: 1.1px;
     text-transform: uppercase; margin: 0;
@@ -145,54 +151,57 @@
     border: 1px solid var(--hairline); border-radius: 4px;
     background: var(--swatch, #da291c);
     pointer-events: none;
+    transition: background-color 160ms linear;
   }
   .picker:hover .picker-face { border-color: var(--ink); }
 
-  /* readouts — a dropdown, so the values never take up standing height.
-     It overlays rather than pushes, which is what keeps the page scroll-free. */
-  .values { position: relative; }
+  /* --- values: expands in place and pushes the rest down --- */
   .values-trigger {
-    display: flex; align-items: center; justify-content: space-between; gap: var(--xxs);
+    display: flex; align-items: center; gap: var(--xxs);
     width: 100%; height: 38px; padding: 0 12px;
     background: transparent; border: 1px solid var(--hairline);
     color: var(--ink); cursor: pointer;
     font-family: var(--font); text-align: left;
   }
   .values-trigger:hover { border-color: var(--body); }
-  .values-trigger[aria-expanded="true"] { border-color: var(--ink); }
+  .values-trigger[aria-expanded="true"] { border-color: var(--ink); border-bottom-color: transparent; }
   .values-trigger .k {
     font-size: 10px; font-weight: 600; letter-spacing: 1.1px;
-    text-transform: uppercase; color: var(--muted); flex-shrink: 0;
-  }
-  .values-trigger .current {
-    margin-left: auto;
-    font-size: 13px; color: var(--ink); font-variant-numeric: tabular-nums;
+    text-transform: uppercase; color: var(--muted);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .chev {
-    width: 9px; height: 9px; flex-shrink: 0;
+    width: 8px; height: 8px; flex-shrink: 0; margin-left: auto;
     border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted);
     transform: translateY(-2px) rotate(45deg);
-    transition: transform 120ms ease;
+    transition: transform 240ms cubic-bezier(.2, .7, .2, 1);
   }
   .values-trigger[aria-expanded="true"] .chev {
     transform: translateY(2px) rotate(225deg);
     border-color: var(--ink);
   }
 
-  .values-menu {
-    position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 10;
-    background: var(--canvas-elevated);
-    border: 1px solid var(--muted);
+  .values-wrap {
+    display: grid; grid-template-rows: 0fr;
+    transition: grid-template-rows 260ms cubic-bezier(.2, .7, .2, 1);
   }
+  .values-wrap[data-open="true"] { grid-template-rows: 1fr; }
+  .values-clip { overflow: hidden; }
+  .values-menu {
+    border: 1px solid var(--ink); border-top: 0;
+    opacity: 0; transform: translateY(-8px);
+    transition: opacity 200ms ease 40ms, transform 240ms cubic-bezier(.2, .7, .2, 1) 40ms;
+  }
+  .values-wrap[data-open="true"] .values-menu { opacity: 1; transform: none; }
+
   .value-row {
     display: flex; align-items: center; justify-content: space-between; gap: var(--xs);
-    width: 100%; padding: 7px 12px; line-height: 1.3;
-    background: transparent; border: 0; border-top: 1px solid rgba(255, 255, 255, 0.07);
+    width: 100%; padding: 8px 12px; line-height: 1.3;
+    background: transparent; border: 0; border-top: 1px solid var(--hairline);
     cursor: pointer; font-family: var(--font); text-align: left;
   }
   .value-row:first-child { border-top: 0; }
-  .value-row:hover { background: rgba(255, 255, 255, 0.06); }
+  .value-row:hover { background: var(--canvas-elevated); }
   .value-row .k {
     font-size: 10px; font-weight: 600; letter-spacing: 1.1px;
     text-transform: uppercase; color: var(--muted);
@@ -220,41 +229,35 @@
 
   .download {
     height: 48px;
-    background: var(--primary); color: #fff;
+    background: var(--accent); color: var(--on-accent);
     border: 0; cursor: pointer;
     font-family: var(--font); font-size: 14px; font-weight: 700;
     letter-spacing: 1.4px; text-transform: uppercase;
+    transition: background-color 160ms linear, color 160ms linear;
   }
-  .download:hover { background: var(--primary-hover); }
-  .download:active { background: var(--primary-active); }
+  /* an inset wash darkens any accent, light or dark */
+  .download:hover { box-shadow: inset 0 0 0 999px rgba(0, 0, 0, 0.14); }
+  .download:active { box-shadow: inset 0 0 0 999px rgba(0, 0, 0, 0.26); }
 
-  .tray {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: var(--xs); min-height: 22px;
-  }
-  .recents { display: flex; gap: var(--xxxs); }
-  .recents button {
-    width: 22px; height: 22px; border: 1px solid var(--hairline);
-    padding: 0; cursor: pointer;
-  }
-  .recents button:hover { border-color: var(--ink); }
-  .hint {
+  footer {
+    align-self: end;
+    padding-top: var(--xs);
     font-size: 10px; font-weight: 600; letter-spacing: 1.1px;
     text-transform: uppercase; color: var(--muted);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
 
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
-  /* one column when there isn't room for two — chip shrinks to keep it scroll-free */
+  /* one column when there isn't room for two — the chip shrinks to keep it scroll-free */
   @media (max-width: 760px) {
-    :root { --stage: clamp(150px, 34dvh, 300px); }
+    :root { --stage: clamp(150px, 32dvh, 300px); }
     body { padding: var(--xs); }
     main { grid-template-columns: minmax(0, 340px); gap: var(--xs); justify-items: center; }
     .panel { width: 100%; gap: 10px; }
   }
   /* last resort: a window too short for the design gets a scroll rather than a crop */
-  @media (max-height: 420px) { body { overflow: auto; } }
+  @media (max-height: 460px) { body { overflow: auto; } }
+  @media (prefers-reduced-motion: reduce) { * { transition-duration: 0ms !important; } }
 </style>
 </head>
 <body>
@@ -264,7 +267,6 @@
       <div class="chip-color" id="chipColor"></div>
       <figcaption class="chip-label">
         <p class="chip-hex" id="chipHex">#DA291C</p>
-        <p class="chip-meta" id="chipMeta">R 218 G 41 B 28</p>
       </figcaption>
     </figure>
   </div>
@@ -297,15 +299,18 @@
 
     <div class="values">
       <button class="values-trigger" id="valuesTrigger" aria-expanded="false" aria-controls="valuesMenu">
-        <span class="k">Values</span>
-        <span class="current" id="valuesCurrent">Rosso Corsa</span>
+        <span class="k" id="valuesLabel">Values</span>
         <span class="chev" aria-hidden="true"></span>
       </button>
-      <div class="values-menu" id="valuesMenu" hidden>
-        <button class="value-row" data-copy="Hex"><span class="k">Hex</span><span class="v" id="outHex">#DA291C</span></button>
-        <button class="value-row" data-copy="Rgb"><span class="k">RGB</span><span class="v" id="outRgb">218, 41, 28</span></button>
-        <button class="value-row" data-copy="Hsl"><span class="k">HSL</span><span class="v" id="outHsl">3, 77%, 48%</span></button>
-        <button class="value-row" data-copy="Name"><span class="k">Nearest</span><span class="v" id="outName">Rosso Corsa</span></button>
+      <div class="values-wrap" id="valuesWrap" data-open="false">
+        <div class="values-clip">
+          <div class="values-menu" id="valuesMenu">
+            <button class="value-row" data-copy="Hex"><span class="k">Hex</span><span class="v" id="outHex">#DA291C</span></button>
+            <button class="value-row" data-copy="Rgb"><span class="k">RGB</span><span class="v" id="outRgb">218, 41, 28</span></button>
+            <button class="value-row" data-copy="Hsl"><span class="k">HSL</span><span class="v" id="outHsl">3, 77%, 48%</span></button>
+            <button class="value-row" data-copy="Name"><span class="k">Nearest</span><span class="v" id="outName">Rosso Corsa</span></button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -330,13 +335,10 @@
     </div>
 
     <button class="download" id="download">Download PNG</button>
-
-    <div class="tray">
-      <div class="recents" id="recents" aria-label="Recent colours"></div>
-      <span class="hint" id="status">Enter to download</span>
-    </div>
   </div>
 </main>
+
+<footer>Created by Sohum Dalal 2026</footer>
 
 <script>
 (() => {
@@ -397,11 +399,12 @@
 
   const el = id => document.getElementById(id);
   const chip = el('chip'), chipColor = el('chipColor'), chipHex = el('chipHex'),
-        chipMeta = el('chipMeta'), input = el('hex'), picker = el('picker'),
-        status = el('status'), downloadBtn = el('download'), recentsEl = el('recents');
+        input = el('hex'), picker = el('picker'), downloadBtn = el('download'),
+        trigger = el('valuesTrigger'), wrap = el('valuesWrap'), menu = el('valuesMenu'),
+        label = el('valuesLabel');
 
   let state = { hex: 'da291c', style: 'chip', format: 'png', size: 1024 };
-  let statusTimer;
+  let labelTimer;
 
   /* ---------- colour maths ---------- */
 
@@ -433,6 +436,12 @@
     return { h: Math.round(h * 60), s: Math.round(s * 100), l: Math.round(l * 100) };
   }
 
+  // WCAG relative luminance — decides whether the CTA takes white or ink type
+  function luminance({ r, g, b }) {
+    const f = v => (v /= 255) <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+    return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+  }
+
   function nearestName(hex) {
     const c = toRgb(hex);
     let best = null, bestD = Infinity;
@@ -450,10 +459,11 @@
 
   /* ---------- rendering ---------- */
 
+  // transient feedback rides on the dropdown's own label
   function say(message) {
-    status.textContent = message;
-    clearTimeout(statusTimer);
-    statusTimer = setTimeout(() => { status.textContent = 'Enter to download'; }, 2200);
+    label.textContent = message;
+    clearTimeout(labelTimer);
+    labelTimer = setTimeout(() => { label.textContent = 'Values'; }, 2000);
   }
 
   function render() {
@@ -461,17 +471,20 @@
     const rgb = toRgb(hex);
     const hsl = toHsl(rgb);
     const display = '#' + hex.toUpperCase();
+    const root = document.documentElement.style;
 
-    document.documentElement.style.setProperty('--swatch', '#' + hex);
+    root.setProperty('--swatch', '#' + hex);
+    root.setProperty('--accent', '#' + hex);
+    // 0.179 is the WCAG crossover where ink overtakes white for contrast
+    root.setProperty('--on-accent', luminance(rgb) > 0.179 ? '#181818' : '#ffffff');
+
     chipColor.style.background = '#' + hex;
     chip.dataset.style = state.style;
     chipHex.textContent = display;
-    chipMeta.textContent = `R ${rgb.r}   G ${rgb.g}   B ${rgb.b}`;
     el('outHex').textContent = display;
     el('outRgb').textContent = `${rgb.r}, ${rgb.g}, ${rgb.b}`;
     el('outHsl').textContent = `${hsl.h}, ${hsl.s}%, ${hsl.l}%`;
     el('outName').textContent = nearestName(hex);
-    el('valuesCurrent').textContent = el('outName').textContent;
     picker.value = '#' + hex;
     downloadBtn.textContent = 'Download ' + state.format.toUpperCase();
   }
@@ -486,62 +499,23 @@
     return true;
   }
 
-  /* ---------- recents ---------- */
-
-  function loadRecents() {
-    try { return JSON.parse(localStorage.getItem('swatch.recents') || '[]'); }
-    catch { return []; }
-  }
-
-  function pushRecent(hex) {
-    const list = [hex, ...loadRecents().filter(h => h !== hex)].slice(0, 7);
-    try { localStorage.setItem('swatch.recents', JSON.stringify(list)); } catch {}
-    paintRecents(list);
-  }
-
-  function paintRecents(list = loadRecents()) {
-    recentsEl.innerHTML = '';
-    for (const hex of list.slice(0, 7)) {
-      const b = document.createElement('button');
-      b.style.background = '#' + hex;
-      b.title = '#' + hex.toUpperCase();
-      b.setAttribute('aria-label', 'Use #' + hex.toUpperCase());
-      b.addEventListener('click', () => setHex(hex));
-      recentsEl.appendChild(b);
-    }
-  }
-
   /* ---------- export ---------- */
 
-  // Drawn in a fixed 1200-wide space, then scaled to the chosen size, so the
-  // preview and every export size stay identical in proportion.
-  const CHIP = { w: 1200, h: 1560, pad: 84 };
+  // Drawn in a fixed 1200-wide space, then scaled to the chosen size, so the preview
+  // and every export size stay identical in proportion. 3:4 card, colour 75% / band 25%.
+  const CHIP = { w: 1200, h: 1600, block: 1200, pad: 80 };
 
   function drawChip(ctx, hex) {
-    const { w, h, pad } = CHIP;
-    const block = w - pad * 2;
+    const { w, h, block, pad } = CHIP;
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, w, h);
     ctx.fillStyle = '#' + hex;
-    ctx.fillRect(pad, pad, block, block);
+    ctx.fillRect(0, 0, w, block);
 
-    const rgb = toRgb(hex);
-    const family = "'Inter', -apple-system, system-ui, sans-serif";
     ctx.fillStyle = '#181818';
-    ctx.textBaseline = 'alphabetic';
-    ctx.font = `500 96px ${family}`;
-    ctx.fillText('#' + hex.toUpperCase(), pad, pad + block + 156);
-
-    ctx.fillStyle = '#666666';
-    ctx.font = `600 38px ${family}`;
-    const meta = `R ${rgb.r}   G ${rgb.g}   B ${rgb.b}`;
-    if ('letterSpacing' in ctx) {
-      ctx.letterSpacing = '4px';
-      ctx.fillText(meta, pad, pad + block + 218);
-      ctx.letterSpacing = '0px';
-    } else {
-      ctx.fillText(meta, pad, pad + block + 218);
-    }
+    ctx.textBaseline = 'middle';
+    ctx.font = `500 112px 'Inter', -apple-system, system-ui, sans-serif`;
+    ctx.fillText('#' + hex.toUpperCase(), pad, block + (h - block) / 2 + 4);
   }
 
   async function raster(hex, format) {
@@ -578,19 +552,14 @@
 </svg>
 `;
     }
-    const { w, h, pad } = CHIP;
-    const block = w - pad * 2;
-    const rgb = toRgb(hex);
+    const { w, h, block, pad } = CHIP;
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${Math.round(size * h / w)}" viewBox="0 0 ${w} ${h}">
   <title>${up}</title>
   <rect width="${w}" height="${h}" fill="#FFFFFF"/>
-  <rect x="${pad}" y="${pad}" width="${block}" height="${block}" fill="${up}"/>
-  <text x="${pad}" y="${pad + block + 156}" fill="#181818"
+  <rect width="${w}" height="${block}" fill="${up}"/>
+  <text x="${pad}" y="${block + (h - block) / 2 + 4}" fill="#181818"
         font-family="Inter, -apple-system, system-ui, sans-serif"
-        font-size="96" font-weight="500">${up}</text>
-  <text x="${pad}" y="${pad + block + 218}" fill="#666666"
-        font-family="Inter, -apple-system, system-ui, sans-serif"
-        font-size="38" font-weight="600" letter-spacing="4">R ${rgb.r}   G ${rgb.g}   B ${rgb.b}</text>
+        font-size="112" font-weight="500" dominant-baseline="middle">${up}</text>
 </svg>
 `;
   }
@@ -611,8 +580,6 @@
       a.click();
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-
-      pushRecent(hex);
       say(`Saved ${hex}-${style}.${format}`);
     } catch (err) {
       say('Export failed — ' + err.message);
@@ -656,16 +623,15 @@
   segment('formatSeg', 'format');
   segment('sizeSeg', 'size', Number);
 
-  const trigger = el('valuesTrigger'), menu = el('valuesMenu');
-
   function openValues(open) {
-    menu.hidden = !open;
+    wrap.dataset.open = String(open);
     trigger.setAttribute('aria-expanded', String(open));
+    menu.inert = !open;
   }
 
   trigger.addEventListener('click', e => {
     e.stopPropagation();
-    openValues(menu.hidden);
+    openValues(wrap.dataset.open !== 'true');
   });
 
   document.addEventListener('click', async e => {
@@ -675,13 +641,12 @@
       return;
     }
     const text = el('out' + row.dataset.copy).textContent;
-    openValues(false);
     try { await navigator.clipboard.writeText(text); say('Copied ' + text); }
     catch { say('Copy blocked by the browser'); }
   });
 
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && !menu.hidden) { openValues(false); trigger.focus(); }
+    if (e.key === 'Escape' && wrap.dataset.open === 'true') { openValues(false); trigger.focus(); }
   });
 
   window.addEventListener('hashchange', () => {
@@ -689,8 +654,8 @@
     if (hex && hex !== state.hex) setHex(hex);
   });
 
+  openValues(false);
   setHex(normalise(location.hash) || seedColour());
-  paintRecents();
 })();
 </script>
 </body>
