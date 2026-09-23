@@ -1,8 +1,10 @@
-# Swatch
+# hex-swatch
 
-A hex code in, a flat image out. No sign-up, no build step, no dependencies — one
-HTML file that turns `#da291c` into a PNG, JPG or SVG you can drop straight into a
-deck, a Figma frame or a CSS comment.
+**One HTML file.** No sign-up, no build step, no dependencies, no framework — a hex
+code in, a flat image out. It turns `#da291c` into a PNG, JPG or SVG you can drop
+straight into a deck, a Figma frame or a CSS comment.
+
+Live at **[swatch.beer](https://swatch.beer)**.
 
 Built because getting a plain PNG of a single colour is absurdly annoying.
 
@@ -16,79 +18,22 @@ open http://localhost:4171
 Opening `index.html` directly (`file://`) works too — the only thing that needs
 `localhost` is the clipboard copy buttons, which browsers gate to secure contexts.
 
-## What it does
-
-**A different colour every load.** The page hydrates with one of eight seeds rather
-than always opening on Rosso Corsa — five are the only chromatic tokens in the
-Ferrari library (`../DESIGN.md` is otherwise greys), three are pigments in the same
-register. It never repeats the colour you saw last time.
-
-| | |
-|---|---|
-| `#da291c` Rosso Corsa | `colors.primary` |
-| `#f13a2c` bright red-orange | `colors.semantic-warning` |
-| `#fff200` Hypersail yellow | `colors.accent-yellow-hypersail` |
-| `#4c98b9` dusty blue | `colors.semantic-info` |
-| `#03904a` racing green | `colors.semantic-success` |
-| `#002fa7` Klein Blue | added |
-| `#004225` British Racing Green | added |
-| `#ff4f00` International Orange | added |
-
-**The page wears the colour.** The download button and the wordmark square take the
-live swatch, not Rosso Corsa — so every load, dice roll and typed hex re-tints the UI.
-The button's label flips between white and `#181818` at the WCAG luminance crossover
-(0.179), so it stays legible on Hypersail yellow and on Klein Blue alike.
-
-**Two export styles**
-
-- **Chip** (the default) — two blocks, no frame: a 3:4 card that's 75% colour with a
-  white band beneath carrying the hex. Exports at your chosen width × 4/3.
-- **Flat** — the colour, edge to edge, square. The one you want most days.
-
-**Three formats** — PNG, JPG (quality 0.95), SVG at 512 / 1024 / 2048 px wide. The
-preview is a true scale model of the file: both are drawn from the same 1200-wide
-geometry, the preview via container query units and the export via a canvas scale.
-
-**Input** — type any of `da291c`, `#DA291C`, `abc`, `#abcd`, `#rrggbbaa`; the field
-normalises as you type and turns Rosso Corsa when it can't parse. There's also the
-native colour picker and a dice button for a genuinely random colour.
-
-**Values dropdown** — HEX, RGB, HSL and the nearest named colour, each a click to
-copy. It expands in place on a 260ms `grid-template-rows` transition, pushing the
-controls below it down rather than floating over them. Nearest-name is a weighted RGB
-distance against ~110 names — a label, not a colour science claim.
-
-**Niceties** — `Enter` downloads. `localhost:4171/#0f4c81` opens straight onto that
-colour, so links still work; without a hash every refresh rotates the seed. Copy and
-save confirmations ride on the dropdown's own label, so nothing else takes up height.
-
-## Layout
-
-Nothing scrolls. The whole composition is sized off one custom property —
-`--stage: clamp(240px, 62dvh, 620px)` — with the swatch on the left and a compact
-control panel on the right, collapsing to one column under 760px. A window shorter
-than 420px gets a scrollbar rather than a crop.
-
 ## Design
 
 Follows the shared Ferrari design system in [`../DESIGN.md`](../DESIGN.md), symlinked
-here as `DESIGN.md`: `#181818` canvas, Rosso Corsa reserved for the single download
-CTA, sharp 0px corners, uppercase button type at 1.4px tracking, the 8px spacing
-ladder, and Inter standing in for FerrariSans.
+here as `DESIGN.md`: `#181818` canvas, sharp 0px corners, uppercase button type at
+1.4px tracking, the 8px spacing ladder, and Inter standing in for FerrariSans.
+
+One deliberate departure: the download button and the wordmark square take the live
+swatch colour rather than Rosso Corsa, flipping their label between white and
+`#181818` at the WCAG luminance crossover so they stay legible on any hue.
 
 ## Files
 
 ```
 hex-swatch/
-├── index.html    the whole app — markup, tokens, logic
-├── DESIGN.md     → ../DESIGN.md (shared across every agent in the tree)
+├── index.html      the whole app — markup, design tokens, logic
+├── DESIGN.md       → ../DESIGN.md (shared across every agent in the tree)
+├── .vercelignore   keeps that symlink out of deploys
 └── README.md
 ```
-
-## Notes
-
-- Chip PNG/JPG waits on `document.fonts.ready` so the label renders in Inter rather
-  than a fallback. Chip **SVG** references Inter by name — anything opening that file
-  without Inter installed falls back to the system sans.
-- JPG has no alpha; both styles are fully opaque so nothing is lost.
-- No analytics, no network calls beyond the Google Fonts stylesheet.
