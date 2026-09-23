@@ -1,0 +1,4 @@
+# DESIGN.md is a symlink to ../DESIGN.md, outside this repo — never upload it
+DESIGN.md
+README.md
+.DS_Store
